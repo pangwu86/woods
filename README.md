@@ -20,7 +20,13 @@
 4. 等等
 
 
-每个功能我们将提供一份api与各个语言(java,go,js)的实现
+每个功能我们将提供一份api与各个语言的实现
+
+目前准备实现的语言:
+
+* java
+* go
+* javascript
 
 我们保证它就像nutz里""utility code"一样好用^_^
 
