@@ -1,5 +1,5 @@
 package org.woods.query;
 
-public class QWordBuilder {
+public class QCnd {
 
 }
