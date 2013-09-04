@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.nutz.json.Json;
 import org.nutz.lang.Files;
 import org.nutz.lang.Lang;
 import org.nutz.lang.Nums;
@@ -239,7 +238,7 @@ public class QWordBuilder {
                     }
                 case Json:
                     try {
-                        return cnd.setValue(Json.fromJson(str));
+                        return cnd.setValue(Lang.map(str));
                     }
                     catch (Exception e) {
                         return null;

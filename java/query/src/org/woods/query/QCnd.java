@@ -1,8 +1,14 @@
 package org.woods.query;
 
+import java.util.Date;
+import java.util.regex.Pattern;
+
 import org.nutz.castor.Castors;
 import org.nutz.json.Json;
 import org.nutz.json.JsonFormat;
+import org.nutz.lang.Strings;
+import org.nutz.lang.util.NutMap;
+import org.nutz.lang.util.Region;
 
 public class QCnd {
 
@@ -32,6 +38,59 @@ public class QCnd {
             return Json.toJson(value, JsonFormat.compact());
         }
         return "<NULL TYPE>";
+    }
+
+    @SuppressWarnings("unchecked")
+    public Region<Integer> asIntRegion() {
+        return (Region<Integer>) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Region<Long> asLongRegion() {
+        return (Region<Long>) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Region<Date> asDateRegion() {
+        return (Region<Date>) value;
+    }
+
+    public Pattern asRegex() {
+        return (Pattern) value;
+    }
+
+    public String asString() {
+        return (String) value;
+    }
+
+    public int[] asIntEnum() {
+        return (int[]) value;
+    }
+
+    public String[] asStringEnum() {
+        return (String[]) value;
+    }
+
+    public String[] asStringLowerEnum() {
+        String[] ss = (String[]) value;
+        String[] arr = new String[ss.length];
+        for (int i = 0; i < ss.length; i++) {
+            arr[i] = Strings.sNull(ss[i].toLowerCase(), "");
+        }
+        return arr;
+    }
+
+    public String[] asStringUpperEnum() {
+        String[] ss = (String[]) value;
+        String[] arr = new String[ss.length];
+        for (int i = 0; i < ss.length; i++) {
+            arr[i] = Strings.sNull(ss[i].toUpperCase(), "");
+        }
+        return arr;
+    }
+
+    public NutMap asJson() {
+        return (NutMap) value;
     }
 
     public String getKey() {
