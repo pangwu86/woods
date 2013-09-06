@@ -54,6 +54,7 @@ func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
 	return qb
 }
 
+// 返回一个qwordBuilder的描述信息
 func (qb *QWordBuilder) String() string {
 	sb := z.SBuilder()
 	kwidth := 15
