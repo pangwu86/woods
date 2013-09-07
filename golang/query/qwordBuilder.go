@@ -3,10 +3,11 @@ package query
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	z "github.com/nutzam/zgo"
 	"io"
-	"os"
+	"regexp"
 	"strings"
 )
 
@@ -23,6 +24,10 @@ type QWordBuilder struct {
 }
 
 type QWordRule struct {
+	Key   string         `json:"key"`
+	Regex *regexp.Regexp `json:"regex"`
+	Type  QCndType       `json:"type"`
+	Seg   string         `json:"seg"`
 }
 
 // 返回一个使用默认参数的qwordBuilder
@@ -59,31 +64,87 @@ func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
 	return qb
 }
 
-// 读取解析规则
-func (qb *QWordBuilder) LoadRules(rfile *os.File) *QWordBuilder {
-	reader := bufio.NewReader(rfile)
+// 读取解析规则, 传入一个实现类io.Reader的对象即可
+func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
+	bufreader := bufio.NewReader(reader)
 	var line string
-	var err error
 	var lnum int
+	var err error
+	var rules []*QWordRule = make([]*QWordRule, 0)
 	for true {
-		lnum++
-		line, err = reader.ReadString('\n')
+		line, err = bufreader.ReadString('\n')
 		if err == io.EOF {
+			err = nil
 			break
 		} else if err != nil {
-			panic(err)
+			break
 		}
-		line = strings.TrimSpace(line)
+		lnum++
 		// 忽略空行与注释行
+		line = strings.TrimSpace(line)
 		if z.IsBlank(line) || strings.HasPrefix(line, "#") {
 			continue
 		}
-		fmt.Printf("n.%d : %s", lnum, line)
+		// FIXME 记得删了
+		fmt.Printf("%3d : %s\n", lnum, line)
 		// 解析行信息
 		if strings.HasPrefix(line, "$") {
+			qwRule := new(QWordRule)
+			// 获得key
+			var fpos int = strings.Index(line, ":")
+			if fpos < 0 {
+				err = errors.New(fmt.Sprintf("invalid rule line %d : %s", lnum, line))
+				break
+			}
+			qwRule.Key = strings.TrimSpace(line[1:fpos])
 
+			// 获得regex
+			var expr string
+			if line[fpos+1] == ':' {
+				// 简要模式
+				expr = "^(" + strings.TrimSpace(line[fpos+2:]) + ")(.*)$"
+			} else {
+				// 普通模式
+				expr = strings.TrimSpace(line[fpos+1:])
+			}
+			regex, err := regexp.Compile(expr)
+			if err != nil {
+				break
+			}
+			qwRule.Regex = regex
+
+			// 读取下一行,必须存在哟
+			line, err = bufreader.ReadString('\n')
+			if err == io.EOF {
+				err = errors.New(fmt.Sprintf("rule line(%d) miss next line", lnum))
+				break
+			} else if err != nil {
+				break
+			}
+			lnum++
+			line = strings.TrimSpace(line)
+			spos := strings.Index(line, "=")
+			if z.IsBlank(line) || !strings.HasPrefix(line, "$") || spos < 0 {
+				err = errors.New(fmt.Sprintf("invalid rule line %d : %s", lnum, line))
+				break
+			}
+			// 获得seg
+			qwRule.Seg = line[:spos]
+			// 获得type
+			qcType, err := QCType(strings.TrimSpace(line[spos+1:]))
+			if err != nil {
+				break
+			}
+			qwRule.Type = qcType
+			// 加入到rules
+			rules = append(rules, qwRule)
 		}
 	}
+	// 是否有错误
+	if err != nil {
+		panic(err)
+	}
+	qb.Rules = rules
 	return qb
 }
 
@@ -100,6 +161,19 @@ func (qb *QWordBuilder) String() string {
 	sb.Append(z.AlignLeft("quoteEnd", kwidth, ' ')).Append(": ").AppendStringArray(qb.QuoteEnd).AppendByte('\n')
 	sb.Append(z.AlignLeft("bracketBegin", kwidth, ' ')).Append(": ").AppendStringArray(qb.BracketBegin).AppendByte('\n')
 	sb.Append(z.AlignLeft("bracketEnd", kwidth, ' ')).Append(": ").AppendStringArray(qb.BracketEnd).AppendByte('\n')
-	// TODO QWordRule
+	// QWordRule
+	if len(qb.Rules) > 0 {
+		sb.Append(z.AlignLeft("rules", kwidth, ' ')).Append(": ").AppendByte('\n')
+		for i := 0; i < len(qb.Rules); i++ {
+			rule := qb.Rules[i]
+			sb.Append(z.DupChar(' ', kwidth)).Append(fmt.Sprintf(" %2d. {", i))
+			sb.Append(z.DupChar(' ', kwidth)).Append(z.DupChar(' ', kwidth)).Append(fmt.Sprint("{")).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("key    : %s", rule.Key)).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("regex  : %s", rule.Regex.String())).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("seg    : %s", rule.Seg)).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("type   : %v", rule.Type)).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth+5)).Append(fmt.Sprint("}")).AppendByte('\n')
+		}
+	}
 	return sb.String()
 }

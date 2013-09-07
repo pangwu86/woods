@@ -3,10 +3,11 @@ package query_test
 import (
 	"encoding/json"
 	"github.com/pangwu86/woods/golang/query"
+	"strings"
 	"testing"
 )
 
-const DEBUG = false
+const DEBUG = true
 
 func printQWBuilder(qb *query.QWordBuilder, t *testing.T) {
 	if DEBUG {
@@ -55,5 +56,19 @@ func Test_QWBuilder_Setup(t *testing.T) {
 }
 
 func Test_QWBuilder_LoadRules(t *testing.T) {
-
+	rulesStr := `
+		# 测试
+		#--------------
+		# "@zozoh"
+		$user  : ^(@)([a-z]+[a-z0-9]{3,})$
+			${2} = String
+		#---------------------------------------------------------
+		# "@A:zozoh"     # admin
+		$admin : ^(@A:)([a-z]+[a-z0-9]{3,})$
+			${2} = String
+	`
+	reader := strings.NewReader(rulesStr)
+	qb := query.QWBuilder()
+	qb.LoadRules(reader)
+	printQWBuilder(qb, t)
 }
