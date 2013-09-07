@@ -69,9 +69,9 @@ func QCType(tpstr string) (QCndType, error) {
 }
 
 type QCnd struct {
-	Key    string
-	Origin string
-	Plain  string
-	Type   QCndType
-	Value  interface{}
+	Key    string      `json:"key"`
+	Origin string      `json:"origin"`
+	Plain  string      `json:"plain"`
+	Type   QCndType    `json:"type"`
+	Value  interface{} `json:"value"`
 }
