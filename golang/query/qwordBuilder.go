@@ -1,8 +1,13 @@
 package query
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
 	z "github.com/nutzam/zgo"
+	"io"
+	"os"
+	"strings"
 )
 
 type QWordBuilder struct {
@@ -50,6 +55,34 @@ func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
 	}
 	if setup.SepAnd != nil {
 		qb.SepAnd = setup.SepAnd
+	}
+	return qb
+}
+
+// 读取解析规则
+func (qb *QWordBuilder) LoadRules(rfile *os.File) *QWordBuilder {
+	reader := bufio.NewReader(rfile)
+	var line string
+	var err error
+	var lnum int
+	for true {
+		lnum++
+		line, err = reader.ReadString('\n')
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+		line = strings.TrimSpace(line)
+		// 忽略空行与注释行
+		if z.IsBlank(line) || strings.HasPrefix(line, "#") {
+			continue
+		}
+		fmt.Printf("n.%d : %s", lnum, line)
+		// 解析行信息
+		if strings.HasPrefix(line, "$") {
+
+		}
 	}
 	return qb
 }
