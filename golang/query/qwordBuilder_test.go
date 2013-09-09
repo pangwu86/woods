@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"encoding/json"
+	z "github.com/nutzam/zgo"
 	"github.com/pangwu86/woods/golang/query"
 	"strings"
 	"testing"
@@ -12,6 +13,12 @@ const DEBUG = true
 func printQWBuilder(qb *query.QWordBuilder, t *testing.T) {
 	if DEBUG {
 		t.Log(qb.String())
+	}
+}
+
+func Test_Before(t *testing.T) {
+	if DEBUG {
+		z.DebugOn()
 	}
 }
 
@@ -80,5 +87,14 @@ func Test_QWBuilder_LoadRules(t *testing.T) {
 	reader := strings.NewReader(rulesStr)
 	qb := query.QWBuilder()
 	qb.LoadRules(reader)
+	printQWBuilder(qb, t)
+}
+
+func Test_QWBuilder_Parse(t *testing.T) {
+	qb := query.QWBuilder().LoadRulesStr(`
+		$user  : ^(@)(.*)$
+			${2} = String
+	`)
+	qb.Parse("	@pw		C(2013-09-22, 2015-07-19)")
 	printQWBuilder(qb, t)
 }
