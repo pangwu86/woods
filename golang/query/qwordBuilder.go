@@ -107,8 +107,9 @@ func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
 				// 普通模式
 				expr = strings.TrimSpace(line[fpos+1:])
 			}
-			regex, err := regexp.Compile(expr)
-			if err != nil {
+			regex, regerr := regexp.Compile(expr)
+			if regerr != nil {
+				err = regerr
 				break
 			}
 			qwRule.Regex = regex
@@ -131,8 +132,9 @@ func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
 			// 获得seg
 			qwRule.Seg = line[:spos]
 			// 获得type
-			qcType, err := QCType(strings.TrimSpace(line[spos+1:]))
-			if err != nil {
+			qcType, qcterr := QCType(strings.TrimSpace(line[spos+1:]))
+			if qcterr != nil {
+				err = qcterr
 				break
 			}
 			qwRule.Type = qcType
@@ -146,6 +148,17 @@ func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
 	}
 	qb.Rules = rules
 	return qb
+}
+
+// 解析查询字符串
+func (qb *QWordBuilder) Parse(kwd string) *QWord {
+	kwd = z.TrimExtraSpace(kwd)
+	if len(kwd) == 0 {
+		return nil
+	}
+	qword := new(QWord)
+
+	return qword
 }
 
 // 返回一个qwordBuilder的描述信息

@@ -45,8 +45,8 @@ func (qcType QCndType) String() string {
 
 // 根据字面量获得对应的QCndType
 func QCType(tpstr string) (QCndType, error) {
-	tpstr = strings.ToLower(tpstr)
-	switch tpstr {
+	lowstr := strings.ToLower(tpstr)
+	switch lowstr {
 	case "regex":
 		return Regex, nil
 	case "string":
@@ -65,7 +65,7 @@ func QCType(tpstr string) (QCndType, error) {
 		return Json, nil
 	}
 	// 一个都没找到??
-	return Unsupport, errors.New(fmt.Sprintf("invalid qCndType %s", tpstr))
+	return Unsupport, errors.New(fmt.Sprintf("invalid qCndType [%s]", tpstr))
 }
 
 type QCnd struct {

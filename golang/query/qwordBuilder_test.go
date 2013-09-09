@@ -33,17 +33,17 @@ func Test_QWBuilder(t *testing.T) {
 func Test_QWBuilder_Setup(t *testing.T) {
 	setup := `
 	{
-		"gOr":  "||",
-		"gAnd": "&&",
+		"gOr":  "或",
+		"gAnd": "与",
 		"sepOr" : ["@@", "%%"],
 		"sepAnd" : ["##", "$$"]
 	}
 	`
 	qb := query.QWBuilder().Setup(setup)
-	if qb.GOr != "||" {
+	if qb.GOr != "或" {
 		t.Errorf("gOr is %s", qb.GOr)
 	}
-	if qb.GAnd != "&&" {
+	if qb.GAnd != "与" {
 		t.Errorf("gAnd is %s", qb.GAnd)
 	}
 	if len(qb.SepOr) != 2 || qb.SepOr[0] != "@@" {
@@ -63,9 +63,19 @@ func Test_QWBuilder_LoadRules(t *testing.T) {
 		$user  : ^(@)([a-z]+[a-z0-9]{3,})$
 			${2} = String
 		#---------------------------------------------------------
-		# "@A:zozoh"     # admin
-		$admin : ^(@A:)([a-z]+[a-z0-9]{3,})$
-			${2} = String
+		# "^a.*"
+		$nm : ^([\^].+)$
+			${1} = Regex
+		#-----------------------------------------------------
+		# 像 age 可以这样简写
+		$age :: age
+		    ${2} = IntRegion
+		#---------------------------------------------------------
+		# "C(2013-09-10 12:34:15, 2013-09-11 13:45:12)"
+		# "C(2013-09-10, 2013-08-23)"
+		$ctm :: C
+		    ${2} = DateRegion
+
 	`
 	reader := strings.NewReader(rulesStr)
 	qb := query.QWBuilder()
