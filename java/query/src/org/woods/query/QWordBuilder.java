@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -11,7 +12,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.nutz.lang.Files;
 import org.nutz.lang.Lang;
 import org.nutz.lang.Nums;
 import org.nutz.lang.Streams;
@@ -45,8 +45,9 @@ public class QWordBuilder {
         this.loadRules(r);
     }
 
-    public QWordBuilder(String path) {
-        this(Files.findFile(path));
+    public QWordBuilder(String rules) {
+        this();
+        this.loadRules(new StringReader(rules));
     }
 
     public QWordBuilder() {
@@ -69,11 +70,13 @@ public class QWordBuilder {
     public QWordBuilder setup(Map<String, Object> map) {
         gOr = Strings.sBlank(map.get("gOr"), gOr);
         gAnd = Strings.sBlank(map.get("gAnd"), gAnd);
-        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr))
-                       .toCharArray();
-        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd))
-                        .toCharArray();
+        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr)).toCharArray();
+        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd)).toCharArray();
         return this;
+    }
+
+    public QWordBuilder loadRulesStr(String rule) {
+        return this.loadRules(new StringReader(rule));
     }
 
     public QWordBuilder loadRules(Reader r) {
@@ -97,18 +100,14 @@ public class QWordBuilder {
                     int pos = line.indexOf(':');
                     // 神码？竟敢木油冒号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s",
-                                             lineNumber,
-                                             line);
+                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
                     // 获取名称
                     qr.key = Strings.trim(line.substring(1, pos));
                     String regex;
 
                     // 看看是否是简要模式
                     if (line.charAt(pos + 1) == ':') {
-                        regex = "^("
-                                + Strings.trim(line.substring(pos + 2))
-                                + ")(.*)$";
+                        regex = "^(" + Strings.trim(line.substring(pos + 2)) + ")(.*)$";
                     }
                     // 普通模式
                     else {
@@ -126,9 +125,7 @@ public class QWordBuilder {
 
                     // 神码？竟敢木油等号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s",
-                                             lineNumber,
-                                             line);
+                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
 
                     qr.type = QCndType.valueOf(Strings.trim(line.substring(pos + 1)));
                     qr.seg = Segments.create(Strings.trim(line.substring(0, pos)));
@@ -223,12 +220,10 @@ public class QWordBuilder {
                     return rD.isNull() ? null : cnd.setValue(rD);
                 case StringEnum:
                     String[] ss = Strings.splitIgnoreBlank(str);
-                    return ss == null || ss.length == 0 ? null
-                                                       : cnd.setValue(ss);
+                    return ss == null || ss.length == 0 ? null : cnd.setValue(ss);
                 case IntEnum:
                     int[] ii = Nums.splitInt(str);
-                    return ii == null || ii.length == 0 ? null
-                                                       : cnd.setValue(ii);
+                    return ii == null || ii.length == 0 ? null : cnd.setValue(ii);
                 case Regex:
                     try {
                         return cnd.setValue(Pattern.compile(str));
@@ -251,9 +246,7 @@ public class QWordBuilder {
         return null;
     }
 
-    private void _kwd_to_flds(String kwd,
-                              List<String> flds,
-                              List<Character> seps) {
+    private void _kwd_to_flds(String kwd, List<String> flds, List<Character> seps) {
 
         char[] cs = kwd.toCharArray();
         StringBuilder sb = new StringBuilder();
