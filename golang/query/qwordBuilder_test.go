@@ -101,5 +101,15 @@ func Test_QWordBuilder_Parse(t *testing.T) {
 	`)
 	qword := qb.Parse("	@pw		C(2013-09-22, 2015-07-19)  T(12,33,55,67)")
 	z.DebugPrint(qword)
-	//printQWBuilder(qb, t)
+}
+
+func Test_QWordBuilder_Parse2(t *testing.T) {
+	qb := query.QWordBuilder(strings.NewReader(`
+		$user  : ^(@)(.*)$
+			${2} = String
+		$test :: S
+		    $(2) = StringEnum
+	`))
+	qword := qb.Parse("	@zozoh C(2013-09-22, 2015-07-19)  S(abc,hha, erer, jdgg gdg)")
+	z.DebugPrint(qword)
 }

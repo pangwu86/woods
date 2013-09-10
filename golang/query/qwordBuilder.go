@@ -84,8 +84,8 @@ func (qb *QWBuilder) String() string {
 }
 
 // 返回一个使用默认参数的qwordBuilder
-func QWordBuilder() *QWBuilder {
-	return &QWBuilder{
+func QWordBuilder(rule ...io.Reader) *QWBuilder {
+	qb := &QWBuilder{
 		"OR",
 		"AND",
 		[]string{" "},
@@ -96,6 +96,11 @@ func QWordBuilder() *QWBuilder {
 		[]string{"}", "]", ")"},
 		[]*QWordRule{},
 	}
+	if len(rule) > 0 {
+		// 加载rule
+		qb.LoadRules(rule[0])
+	}
+	return qb
 }
 
 // 设置qwordBuilder的参数, 使用json格式字符串
