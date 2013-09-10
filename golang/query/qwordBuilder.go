@@ -293,6 +293,16 @@ func (qb *QWBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []
 	// 分割查询字符串
 	flds = make([]string, 0, 5)
 	seps = make([]byte, 0, 5)
+	// FIXME 这个地方需要在好好想想
+	// 保证一个特殊情况下的正确性, 比如或是" "与是"," kwd中有类似"xxx , yyy"这样的语句,需要把处理
+	// 这个特例是一搬在" "当做或的情况下
+	if z.IsInStrings(qb.SepOr, " ") {
+		for _, sAnd := range qb.SepAnd {
+			ss := " " + sAnd + " "
+			kwd = strings.Replace(kwd, ss, sAnd, -1)
+		}
+	}
+	// 开始解析
 	kszie := len(kwd)
 	fld := z.SBuilder()
 	for i := 0; i < kszie; i++ {

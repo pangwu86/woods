@@ -146,7 +146,7 @@ func (qword *QWord) Each(each func(index int, qc *QCnd, prevIsAnd bool)) {
 	if !qword.IsEmpty() && each != nil {
 		for i, eqc := range qword.Cnds {
 			if i > 0 {
-				each(i, eqc, qword.Rels[i] == "&")
+				each(i, eqc, qword.Rels[i-1] == "&")
 			} else {
 				each(i, eqc, false)
 			}

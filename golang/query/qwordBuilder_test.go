@@ -113,3 +113,17 @@ func Test_QWordBuilder_Parse2(t *testing.T) {
 	qword := qb.Parse("	@zozoh C(2013-09-22, 2015-07-19)  S(abc,hha, erer, jdgg gdg)")
 	z.DebugPrint(qword)
 }
+
+func Test_QWord_Each(t *testing.T) {
+	qb := query.QWordBuilder(strings.NewReader(`
+		$user  : ^(@)(.*)$
+			${2} = String
+		$test :: S
+		    $(2) = StringEnum
+	`))
+	qword := qb.Parse("@zozoh ,     S(abc,hha, erer, jdgg gdg)")
+	qword.Each(func(index int, qc *query.QCnd, prevIsAnd bool) {
+		z.DebugPrintf("no.%d prevIsAnd.%v \n", index, prevIsAnd)
+		z.DebugPrintln(qc.String())
+	})
+}
