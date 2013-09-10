@@ -41,7 +41,7 @@ func (qword *QWord) String() string {
 	return sb.String()
 }
 
-type QWordBuilder struct {
+type QWBuilder struct {
 	GOr          string       `json:"gOr"`
 	GAnd         string       `json:"gAnd"`
 	SepOr        []string     `json:"sepOr"`
@@ -54,7 +54,7 @@ type QWordBuilder struct {
 }
 
 // 返回一个qwordBuilder的描述信息
-func (qb *QWordBuilder) String() string {
+func (qb *QWBuilder) String() string {
 	sb := z.SBuilder()
 	kwidth := 15
 	sb.Append("QWorldBuilder Setup").AppendByte('\n')
@@ -84,8 +84,8 @@ func (qb *QWordBuilder) String() string {
 }
 
 // 返回一个使用默认参数的qwordBuilder
-func QWBuilder() *QWordBuilder {
-	return &QWordBuilder{
+func QWordBuilder() *QWBuilder {
+	return &QWBuilder{
 		"OR",
 		"AND",
 		[]string{" "},
@@ -100,8 +100,8 @@ func QWBuilder() *QWordBuilder {
 
 // 设置qwordBuilder的参数, 使用json格式字符串
 // 仅仅可以修改 gOr, gAnd, sepOr, sepAnd 四个参数
-func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
-	setup := new(QWordBuilder)
+func (qb *QWBuilder) Setup(sjson string) *QWBuilder {
+	setup := new(QWBuilder)
 	err := json.Unmarshal([]byte(sjson), setup)
 	if err != nil {
 		panic(err)
@@ -119,12 +119,12 @@ func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
 }
 
 // 读取解析规则字符串
-func (qb *QWordBuilder) LoadRulesStr(str string) *QWordBuilder {
+func (qb *QWBuilder) LoadRulesStr(str string) *QWBuilder {
 	return qb.LoadRules(strings.NewReader(str))
 }
 
 // 读取解析规则, 传入一个实现了io.Reader的对象即可
-func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
+func (qb *QWBuilder) LoadRules(reader io.Reader) *QWBuilder {
 	bufreader := bufio.NewReader(reader)
 	var line string
 	var lnum int
@@ -210,7 +210,7 @@ func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
 }
 
 // 解析查询字符串
-func (qb *QWordBuilder) Parse(kwd string) *QWord {
+func (qb *QWBuilder) Parse(kwd string) *QWord {
 	kwd = z.TrimExtraSpace(kwd)
 	if len(kwd) == 0 {
 		return nil
@@ -244,7 +244,7 @@ func (qb *QWordBuilder) Parse(kwd string) *QWord {
 }
 
 // 配备并重新组合查询语句, 给出QCnd对象
-func (qb *QWordBuilder) evalQCnd(fld string) *QCnd {
+func (qb *QWBuilder) evalQCnd(fld string) *QCnd {
 	for _, rule := range qb.Rules {
 		if rule.Regex.MatchString(fld) {
 			z.DebugPrintf("fld [%s] match regex [%s]\n", fld, rule.Regex.String())
@@ -306,7 +306,7 @@ func findMatchStr(seg string, groups []string) string {
 }
 
 // 提取查询语句与连接符
-func (qb *QWordBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []string, seps []byte) {
+func (qb *QWBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []string, seps []byte) {
 	// 判断全局参数 (先强制认为 'xxx:')
 	// FIXME 后面改成正则匹配, 可以多加空格
 	isGOr = strings.HasPrefix(kwd, qb.GOr+":")

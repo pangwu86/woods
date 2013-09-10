@@ -10,7 +10,7 @@ import (
 
 const DEBUG = true
 
-func printQWBuilder(qb *query.QWordBuilder, t *testing.T) {
+func printQWBuilder(qb *query.QWBuilder, t *testing.T) {
 	if DEBUG {
 		t.Log(qb.String())
 	}
@@ -22,8 +22,8 @@ func Test_Before(t *testing.T) {
 	}
 }
 
-func Test_QWBuilder(t *testing.T) {
-	qb := query.QWBuilder()
+func Test_QWordBuilder(t *testing.T) {
+	qb := query.QWordBuilder()
 	if qb.GOr != "OR" {
 		t.Errorf("gOr is %s", qb.GOr)
 	}
@@ -37,7 +37,7 @@ func Test_QWBuilder(t *testing.T) {
 	printQWBuilder(qb, t)
 }
 
-func Test_QWBuilder_Setup(t *testing.T) {
+func Test_QWordBuilder_Setup(t *testing.T) {
 	setup := `
 	{
 		"gOr":  "或",
@@ -46,7 +46,7 @@ func Test_QWBuilder_Setup(t *testing.T) {
 		"sepAnd" : ["##", "$$"]
 	}
 	`
-	qb := query.QWBuilder().Setup(setup)
+	qb := query.QWordBuilder().Setup(setup)
 	if qb.GOr != "或" {
 		t.Errorf("gOr is %s", qb.GOr)
 	}
@@ -62,7 +62,7 @@ func Test_QWBuilder_Setup(t *testing.T) {
 	printQWBuilder(qb, t)
 }
 
-func Test_QWBuilder_LoadRules(t *testing.T) {
+func Test_QWordBuilder_LoadRules(t *testing.T) {
 	rulesStr := `
 		# 测试
 		#--------------
@@ -85,13 +85,13 @@ func Test_QWBuilder_LoadRules(t *testing.T) {
 
 	`
 	reader := strings.NewReader(rulesStr)
-	qb := query.QWBuilder()
+	qb := query.QWordBuilder()
 	qb.LoadRules(reader)
 	printQWBuilder(qb, t)
 }
 
-func Test_QWBuilder_Parse(t *testing.T) {
-	qb := query.QWBuilder().LoadRulesStr(`
+func Test_QWordBuilder_Parse(t *testing.T) {
+	qb := query.QWordBuilder().LoadRulesStr(`
 		$user  : ^(@)(.*)$
 			${2} = String
 		$ctm   :: C

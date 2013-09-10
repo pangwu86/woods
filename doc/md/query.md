@@ -170,7 +170,7 @@
 
 ### Golang
 
-	qb := NewQWordBuilder(z.Ph("~/myapp/mywords.conf"));
+	qb := query.QWBuilder:
 	qw := qb.parse("'age(4,10)', ^a.*");
 
 ### Js
