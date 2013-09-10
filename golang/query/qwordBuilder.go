@@ -26,8 +26,18 @@ type QWord struct {
 }
 
 func (qword *QWord) String() string {
-	// TODO
 	sb := z.SBuilder()
+	sb.Append("rels is :").AppendStringArray(qword.Rels).EndLine()
+	sb.Append("cnds is :\n")
+	for _, cnd := range qword.Cnds {
+		sb.Append(cnd.String()).EndLine()
+	}
+	if len(qword.Unmatchs) > 0 {
+		sb.Append("unmathchs is :\n")
+		for _, um := range qword.Unmatchs {
+			sb.Append("    " + um).EndLine()
+		}
+	}
 	return sb.String()
 }
 

@@ -94,7 +94,12 @@ func Test_QWBuilder_Parse(t *testing.T) {
 	qb := query.QWBuilder().LoadRulesStr(`
 		$user  : ^(@)(.*)$
 			${2} = String
+		$ctm   :: C
+			${2} = DateRegion
+		$test :: T
+		    $(2) = IntEnum
 	`)
-	qb.Parse("	@pw		C(2013-09-22, 2015-07-19)")
-	printQWBuilder(qb, t)
+	qword := qb.Parse("	@pw		C(2013-09-22, 2015-07-19)  T(12,33,55,67)")
+	z.DebugPrint(qword)
+	//printQWBuilder(qb, t)
 }

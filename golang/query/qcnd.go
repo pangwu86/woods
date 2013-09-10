@@ -3,6 +3,7 @@ package query
 import (
 	"errors"
 	"fmt"
+	z "github.com/nutzam/zgo"
 	"strings"
 )
 
@@ -74,4 +75,15 @@ type QCnd struct {
 	Plain  string      `json:"plain"`
 	Type   QCndType    `json:"type"`
 	Value  interface{} `json:"value"`
+}
+
+func (qc *QCnd) String() string {
+	sb := z.SBuilder()
+	sb.Append("{").EndLine()
+	sb.Append("    ").Append("key   : ").Append(qc.Key).EndLine()
+	sb.Append("    ").Append("plain : ").Append(qc.Plain).EndLine()
+	sb.Append("    ").Append("type  : ").Append(qc.Type.String()).EndLine()
+	sb.Append("    ").Append("value : ").Append(qc.Value).EndLine()
+	sb.Append("}")
+	return sb.String()
 }
