@@ -242,7 +242,7 @@ func (qb *QWordBuilder) evalQCnd(fld string) *QCnd {
 			for _, grp := range groups {
 				z.DebugPrintf("    g_%s\n", grp)
 			}
-			extractStr := findMatchStr(rule.Seg, groups)
+			extractStr := z.Trim(findMatchStr(rule.Seg, groups))
 			// 生成QCnd
 			qc := new(QCnd)
 			qc.Key = rule.Key
@@ -254,12 +254,19 @@ func (qb *QWordBuilder) evalQCnd(fld string) *QCnd {
 				qc.Value = extractStr
 			case Regex:
 				qc.Value = regexp.MustCompile(extractStr)
-			case IntRegion:
-
-			case LongRegion:
-			case DateRegion:
+			case IntRegion, LongRegion, DateRegion:
+				qc.Value = z.MakeRegion(extractStr)
 			case StringEnum:
+				senum := extractStr[1 : len(extractStr)-1]
+				qc.Value = z.SplitIgnoreBlank(senum, ",")
 			case IntEnum:
+				ienum := extractStr[1 : len(extractStr)-1]
+				iarray := make([]int, 0, 5)
+				for _, ie := range z.SplitIgnoreBlank(ienum, ",") {
+					ione, _ := strconv.Atoi(ie)
+					iarray = append(iarray, ione)
+				}
+				qc.Value = iarray
 			case Json:
 				jmap := new(map[string]interface{})
 				jerr := z.JsonFromString(extractStr, jmap)
