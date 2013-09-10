@@ -12,35 +12,6 @@ import (
 	"strings"
 )
 
-type QWordRule struct {
-	Key   string         `json:"key"`
-	Regex *regexp.Regexp `json:"regex"`
-	Type  QCndType       `json:"type"`
-	Seg   string         `json:"seg"`
-}
-
-type QWord struct {
-	Rels     []string `json:"rels"`
-	Cnds     []*QCnd  `json:"cnds"`
-	Unmatchs []string `json:"unmatchs"`
-}
-
-func (qword *QWord) String() string {
-	sb := z.SBuilder()
-	sb.Append("rels is :").AppendStringArray(qword.Rels).EndLine()
-	sb.Append("cnds is :\n")
-	for _, cnd := range qword.Cnds {
-		sb.Append(cnd.String()).EndLine()
-	}
-	if len(qword.Unmatchs) > 0 {
-		sb.Append("unmathchs is :\n")
-		for _, um := range qword.Unmatchs {
-			sb.Append("    " + um).EndLine()
-		}
-	}
-	return sb.String()
-}
-
 type QWBuilder struct {
 	GOr          string       `json:"gOr"`
 	GAnd         string       `json:"gAnd"`

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	z "github.com/nutzam/zgo"
+	"regexp"
 	"strings"
 )
 
@@ -85,5 +86,86 @@ func (qc *QCnd) String() string {
 	sb.Append("    ").Append("type  : ").Append(qc.Type.String()).EndLine()
 	sb.Append("    ").Append("value : ").Append(qc.Value).EndLine()
 	sb.Append("}")
+	return sb.String()
+}
+
+type QWordRule struct {
+	Key   string         `json:"key"`
+	Regex *regexp.Regexp `json:"regex"`
+	Type  QCndType       `json:"type"`
+	Seg   string         `json:"seg"`
+}
+
+type QWord struct {
+	Rels     []string `json:"rels"`
+	Cnds     []*QCnd  `json:"cnds"`
+	Unmatchs []string `json:"unmatchs"`
+}
+
+func (qword *QWord) IsAllAnd() bool {
+	for _, rel := range qword.Rels {
+		if rel == "|" {
+			return false
+		}
+	}
+	return true
+}
+
+func (qword *QWord) IsAllOr() bool {
+	for _, rel := range qword.Rels {
+		if rel == "&" {
+			return false
+		}
+	}
+	return true
+}
+
+func (qword *QWord) SetAll(char byte) *QWord {
+	var set string
+	if char == '&' {
+		set = string(char)
+	} else {
+		set = "|"
+	}
+	for i := 0; i < len(qword.Rels); i++ {
+		qword.Rels[i] = set
+	}
+	return qword
+}
+
+func (qword *QWord) Size() int {
+	return len(qword.Cnds)
+}
+
+func (qword *QWord) IsEmpty() bool {
+	return qword.Size() == 0
+}
+
+// 循环变量Cnds
+func (qword *QWord) Each(each func(index int, qc *QCnd, prevIsAnd bool)) {
+	if !qword.IsEmpty() && each != nil {
+		for i, eqc := range qword.Cnds {
+			if i > 0 {
+				each(i, eqc, qword.Rels[i] == "&")
+			} else {
+				each(i, eqc, false)
+			}
+		}
+	}
+}
+
+func (qword *QWord) String() string {
+	sb := z.SBuilder()
+	sb.Append("rels is :").AppendStringArray(qword.Rels).EndLine()
+	sb.Append("cnds is :\n")
+	for _, cnd := range qword.Cnds {
+		sb.Append(cnd.String()).EndLine()
+	}
+	if len(qword.Unmatchs) > 0 {
+		sb.Append("unmathchs is :\n")
+		for _, um := range qword.Unmatchs {
+			sb.Append("    " + um).EndLine()
+		}
+	}
 	return sb.String()
 }
