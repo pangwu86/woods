@@ -8,6 +8,7 @@ import (
 	z "github.com/nutzam/zgo"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -103,6 +104,7 @@ func (qb *QWordBuilder) Setup(sjson string) *QWordBuilder {
 	if setup.SepAnd != nil {
 		qb.SepAnd = setup.SepAnd
 	}
+	// TODO 需要check一下设置的项
 	return qb
 }
 
@@ -177,7 +179,7 @@ func (qb *QWordBuilder) LoadRules(reader io.Reader) *QWordBuilder {
 				break
 			}
 			// 获得seg
-			qwRule.Seg = line[:spos]
+			qwRule.Seg = z.Trim(line[:spos])
 			// 获得type
 			qcType, qcterr := QCType(strings.TrimSpace(line[spos+1:]))
 			if qcterr != nil {
@@ -208,18 +210,82 @@ func (qb *QWordBuilder) Parse(kwd string) *QWord {
 	qword := new(QWord)
 	sseps := len(seps)
 	for i, fld := range flds {
-		// 分隔符
-		if i < sseps {
-			if isGOr {
-				qword.Rels = append(qword.Rels, "|")
-			} else if isGAnd {
-				qword.Rels = append(qword.Rels, "&")
-			}
-		}
 		// qcnd
-		fmt.Println(fld)
+		qc := qb.evalQCnd(fld)
+		if qc != nil {
+			qword.Cnds = append(qword.Cnds, qc)
+			// 分隔符
+			if i < sseps {
+				if isGOr {
+					qword.Rels = append(qword.Rels, "|")
+				} else if isGAnd {
+					qword.Rels = append(qword.Rels, "&")
+				} else if z.IsInStrings(qb.SepOr, string(seps[i])) {
+					qword.Rels = append(qword.Rels, "|")
+				} else if z.IsInStrings(qb.SepAnd, string(seps[i])) {
+					qword.Rels = append(qword.Rels, "&")
+				}
+			}
+		} else {
+			qword.Unmatchs = append(qword.Unmatchs, fld)
+		}
 	}
 	return qword
+}
+
+// 配备并重新组合查询语句, 给出QCnd对象
+func (qb *QWordBuilder) evalQCnd(fld string) *QCnd {
+	for _, rule := range qb.Rules {
+		if rule.Regex.MatchString(fld) {
+			z.DebugPrintf("fld [%s] match regex [%s]\n", fld, rule.Regex.String())
+			groups := rule.Regex.FindStringSubmatch(fld)
+			for _, grp := range groups {
+				z.DebugPrintf("    g_%s\n", grp)
+			}
+			extractStr := findMatchStr(rule.Seg, groups)
+			// 生成QCnd
+			qc := new(QCnd)
+			qc.Key = rule.Key
+			qc.Origin = fld
+			qc.Plain = extractStr
+			qc.Type = rule.Type
+			switch qc.Type {
+			case String:
+				qc.Value = extractStr
+			case Regex:
+				qc.Value = regexp.MustCompile(extractStr)
+			case IntRegion:
+
+			case LongRegion:
+			case DateRegion:
+			case StringEnum:
+			case IntEnum:
+			case Json:
+				jmap := new(map[string]interface{})
+				jerr := z.JsonFromString(extractStr, jmap)
+				if jerr != nil {
+					qc.Value = jmap
+				}
+			default:
+				// unsupport
+				qc.Value = nil
+			}
+			return qc
+		}
+	}
+	z.DebugPrintf("fld [%s] miss match\n", fld)
+	return nil
+}
+
+// 简单的查找出对应的group
+func findMatchStr(seg string, groups []string) string {
+	// FIXME 这里先简单实现下, 默认格式都是 '#{x}'
+	seg = seg[2 : len(seg)-1]
+	pos, err := strconv.Atoi(seg)
+	if err != nil {
+		panic(err)
+	}
+	return groups[pos]
 }
 
 // 提取查询语句与连接符
