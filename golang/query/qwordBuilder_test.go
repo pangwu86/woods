@@ -127,3 +127,17 @@ func Test_QWord_Each(t *testing.T) {
 		z.DebugPrintln(qc.String())
 	})
 }
+
+func Test_QWord_Region(t *testing.T) {
+	qb := query.QWordBuilder(strings.NewReader(`
+		$ct  :: C
+			${2} = IntRegion
+		$st  :: S
+			${2} = IntRegion
+	`))
+	qword := qb.Parse("C[10,15], S(12,)")
+	qword.Each(func(index int, qc *query.QCnd, prevIsAnd bool) {
+		z.DebugPrintf("no.%d prevIsAnd.%v \n", index, prevIsAnd)
+		z.DebugPrintln(qc.String())
+	})
+}
