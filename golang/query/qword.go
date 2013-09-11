@@ -79,12 +79,12 @@ type QCnd struct {
 }
 
 func (qc *QCnd) String() string {
-	sb := z.SBuilder()
-	sb.Append("{").EndLine()
-	sb.Append("    ").Append("key   : ").Append(qc.Key).EndLine()
-	sb.Append("    ").Append("plain : ").Append(qc.Plain).EndLine()
-	sb.Append("    ").Append("type  : ").Append(qc.Type.String()).EndLine()
-	sb.Append("    ").Append("value : ").Append(qc.Value).EndLine()
+	sb := z.StringBuilder()
+	sb.Append("{").EOL()
+	sb.Append("    ").Append("key   : ").Append(qc.Key).EOL()
+	sb.Append("    ").Append("plain : ").Append(qc.Plain).EOL()
+	sb.Append("    ").Append("type  : ").Append(qc.Type.String()).EOL()
+	sb.Append("    ").Append("value : ").Append(qc.Value).EOL()
 	sb.Append("}")
 	return sb.String()
 }
@@ -155,16 +155,16 @@ func (qword *QWord) Each(each func(index int, qc *QCnd, prevIsAnd bool)) {
 }
 
 func (qword *QWord) String() string {
-	sb := z.SBuilder()
-	sb.Append("rels is :").AppendStringArray(qword.Rels).EndLine()
+	sb := z.StringBuilder()
+	sb.Append("rels is :").Append(qword.Rels).EOL()
 	sb.Append("cnds is :\n")
 	for _, cnd := range qword.Cnds {
-		sb.Append(cnd.String()).EndLine()
+		sb.Append(cnd.String()).EOL()
 	}
 	if len(qword.Unmatchs) > 0 {
 		sb.Append("unmathchs is :\n")
 		for _, um := range qword.Unmatchs {
-			sb.Append("    " + um).EndLine()
+			sb.Append("    " + um).EOL()
 		}
 	}
 	return sb.String()

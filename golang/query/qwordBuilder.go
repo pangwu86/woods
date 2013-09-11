@@ -26,29 +26,29 @@ type QWBuilder struct {
 
 // 返回一个qwordBuilder的描述信息
 func (qb *QWBuilder) String() string {
-	sb := z.SBuilder()
+	sb := z.StringBuilder()
 	kwidth := 15
-	sb.Append("QWorldBuilder Setup").AppendByte('\n')
-	sb.Append(z.AlignLeft("gOr", kwidth, ' ')).Append(": ").Append(qb.GOr).AppendByte('\n')
-	sb.Append(z.AlignLeft("gAnd", kwidth, ' ')).Append(": ").Append(qb.GAnd).AppendByte('\n')
-	sb.Append(z.AlignLeft("sepOr", kwidth, ' ')).Append(": ").AppendStringArray(qb.SepOr).AppendByte('\n')
-	sb.Append(z.AlignLeft("sepAnd", kwidth, ' ')).Append(": ").AppendStringArray(qb.SepAnd).AppendByte('\n')
-	sb.Append(z.AlignLeft("quoteBegin", kwidth, ' ')).Append(": ").AppendStringArray(qb.QuoteBegin).AppendByte('\n')
-	sb.Append(z.AlignLeft("quoteEnd", kwidth, ' ')).Append(": ").AppendStringArray(qb.QuoteEnd).AppendByte('\n')
-	sb.Append(z.AlignLeft("bracketBegin", kwidth, ' ')).Append(": ").AppendStringArray(qb.BracketBegin).AppendByte('\n')
-	sb.Append(z.AlignLeft("bracketEnd", kwidth, ' ')).Append(": ").AppendStringArray(qb.BracketEnd).AppendByte('\n')
+	sb.Append("QWorldBuilder Setup").EOL()
+	sb.Append(z.AlignLeft("gOr", kwidth, ' ')).Append(": ").Append(qb.GOr).EOL()
+	sb.Append(z.AlignLeft("gAnd", kwidth, ' ')).Append(": ").Append(qb.GAnd).EOL()
+	sb.Append(z.AlignLeft("sepOr", kwidth, ' ')).Append(": ").Append(qb.SepOr).EOL()
+	sb.Append(z.AlignLeft("sepAnd", kwidth, ' ')).Append(": ").Append(qb.SepAnd).EOL()
+	sb.Append(z.AlignLeft("quoteBegin", kwidth, ' ')).Append(": ").Append(qb.QuoteBegin).EOL()
+	sb.Append(z.AlignLeft("quoteEnd", kwidth, ' ')).Append(": ").Append(qb.QuoteEnd).EOL()
+	sb.Append(z.AlignLeft("bracketBegin", kwidth, ' ')).Append(": ").Append(qb.BracketBegin).EOL()
+	sb.Append(z.AlignLeft("bracketEnd", kwidth, ' ')).Append(": ").Append(qb.BracketEnd).EOL()
 	// QWordRule
 	if len(qb.Rules) > 0 {
-		sb.Append(z.AlignLeft("rules", kwidth, ' ')).Append(": ").AppendByte('\n')
+		sb.Append(z.AlignLeft("rules", kwidth, ' ')).Append(": ").EOL()
 		for i := 0; i < len(qb.Rules); i++ {
 			rule := qb.Rules[i]
 			sb.Append(z.DupChar(' ', kwidth)).Append(fmt.Sprintf(" %2d. {", i))
-			sb.Append(z.DupChar(' ', kwidth)).Append(z.DupChar(' ', kwidth)).Append(fmt.Sprint("{")).AppendByte('\n')
-			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("key    : %s", rule.Key)).AppendByte('\n')
-			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("regex  : %s", rule.Regex.String())).AppendByte('\n')
-			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("seg    : %s", rule.Seg)).AppendByte('\n')
-			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("type   : %v", rule.Type)).AppendByte('\n')
-			sb.Append(z.DupChar(' ', kwidth+5)).Append(fmt.Sprint("}")).AppendByte('\n')
+			sb.Append(z.DupChar(' ', kwidth)).Append(z.DupChar(' ', kwidth)).Append(fmt.Sprint("{")).EOL()
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("key    : %s", rule.Key)).EOL()
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("regex  : %s", rule.Regex.String())).EOL()
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("seg    : %s", rule.Seg)).EOL()
+			sb.Append(z.DupChar(' ', kwidth+9)).Append(fmt.Sprintf("type   : %v", rule.Type)).EOL()
+			sb.Append(z.DupChar(' ', kwidth+5)).Append(fmt.Sprint("}")).EOL()
 		}
 	}
 	return sb.String()
@@ -304,7 +304,7 @@ func (qb *QWBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []
 	}
 	// 开始解析
 	kszie := len(kwd)
-	fld := z.SBuilder()
+	fld := z.StringBuilder()
 	for i := 0; i < kszie; i++ {
 		c := kwd[i]
 		z.DebugPrintf("extract kwd %3d -> [%s]\n", i, string(c))
@@ -318,19 +318,19 @@ func (qb *QWBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []
 				} else if c == '\\' {
 					// FIXME 这里没有做防守
 					i++
-					fld.AppendByte(kwd[i])
+					fld.Append(kwd[i])
 				} else {
-					fld.AppendByte(c)
+					fld.Append(c)
 				}
 			}
 			continue
 		}
 		// 如果是括弧
 		if z.IsInStrings(qb.BracketBegin, string(c)) {
-			fld.AppendByte(c)
+			fld.Append(c)
 			for i++; i < kszie; i++ {
 				c = kwd[i]
-				fld.AppendByte(c)
+				fld.Append(c)
 				if z.IsInStrings(qb.BracketEnd, string(c)) {
 					break
 				}
@@ -343,12 +343,12 @@ func (qb *QWBuilder) extractFldsAndSeps(kwd string) (isGOr, isGAnd bool, flds []
 			if len(cfld) > 0 {
 				flds = append(flds, cfld)
 				seps = append(seps, c)
-				fld = z.SBuilder()
+				fld = z.StringBuilder()
 			}
 			continue
 		}
 		// 没什么特殊情况,那就加入到sb
-		fld.AppendByte(c)
+		fld.Append(c)
 	}
 	// 加入最后一个条件
 	lfld := z.Trim(fld.String())
