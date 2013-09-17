@@ -97,9 +97,14 @@ type QWordRule struct {
 }
 
 type QWord struct {
-	Rels     []string `json:"rels"`
-	Cnds     []*QCnd  `json:"cnds"`
-	Unmatchs []string `json:"unmatchs"`
+	Rels     []string         `json:"rels"`
+	Cnds     []*QCnd          `json:"cnds"`
+	Unmatchs []string         `json:"unmatchs"`
+	CndMap   map[string]*QCnd `json:"cndmap"`
+}
+
+func (qword *QWord) Get(key string) *QCnd {
+	return qword.CndMap[key]
 }
 
 func (qword *QWord) IsAllAnd() bool {

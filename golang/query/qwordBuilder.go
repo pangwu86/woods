@@ -194,23 +194,27 @@ func (qb *QWBuilder) Parse(kwd string) *QWord {
 	isGOr, isGAnd, flds, seps := qb.extractFldsAndSeps(kwd)
 	// 解析为QWord
 	qword := new(QWord)
+	qword.CndMap = map[string]*QCnd{}
 	sseps := len(seps)
 	for i, fld := range flds {
 		// qcnd
 		qc := qb.evalQCnd(fld)
 		if qc != nil {
 			qword.Cnds = append(qword.Cnds, qc)
+			qword.CndMap[qc.Key] = qc
 			// 分隔符
 			if i < sseps {
+				sp := "&"
 				if isGOr {
-					qword.Rels = append(qword.Rels, "|")
+					sp = "|"
 				} else if isGAnd {
-					qword.Rels = append(qword.Rels, "&")
+					sp = "&"
 				} else if z.IsInStrings(qb.SepOr, string(seps[i])) {
-					qword.Rels = append(qword.Rels, "|")
+					sp = "|"
 				} else if z.IsInStrings(qb.SepAnd, string(seps[i])) {
-					qword.Rels = append(qword.Rels, "&")
+					sp = "&"
 				}
+				qword.Rels = append(qword.Rels, sp)
 			}
 		} else {
 			qword.Unmatchs = append(qword.Unmatchs, fld)

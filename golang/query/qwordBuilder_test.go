@@ -134,10 +134,16 @@ func Test_QWord_Region(t *testing.T) {
 			${2} = IntRegion
 		$st  :: S
 			${2} = IntRegion
+		$usr : ^(@)([a-zA-Z]+)$
+			${2} = String
 	`))
-	qword := qb.Parse("C[10,15], S(12,)")
+	qword := qb.Parse("C[10,15], S(12,) , @pw")
 	qword.Each(func(index int, qc *query.QCnd, prevIsAnd bool) {
 		z.DebugPrintf("no.%d prevIsAnd.%v \n", index, prevIsAnd)
 		z.DebugPrintln(qc.String())
 	})
+	qc := qword.Get("usr")
+	if qc == nil {
+		t.Error("can't find qcnd by key")
+	}
 }
