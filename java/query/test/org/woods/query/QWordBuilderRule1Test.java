@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.nutz.castor.Castors;
 import org.nutz.json.Json;
 import org.nutz.json.JsonFormat;
+import org.nutz.lang.Files;
 import org.nutz.lang.Lang;
 
 public class QWordBuilderRule1Test {
@@ -114,7 +115,7 @@ public class QWordBuilderRule1Test {
 
     @Before
     public void before() {
-        qb = new QWordBuilder("org/woods/query/rule1.txt");
+        qb = new QWordBuilder(Files.findFile("org/woods/query/rule1.txt"));
     }
 
     private void _c_nil(QWord q) {
@@ -134,9 +135,7 @@ public class QWordBuilderRule1Test {
             assertTrue(Lang.equals(m0, m1));
         }
         catch (AssertionError e) {
-            System.out.printf("expect '%s', but '%s'",
-                              Json.toJson(map, JsonFormat.compact()),
-                              q);
+            System.out.printf("expect '%s', but '%s'", Json.toJson(map, JsonFormat.compact()), q);
             throw e;
         }
     }
