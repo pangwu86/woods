@@ -45,16 +45,11 @@ public class QWordBuilder {
         this.loadRules(r);
     }
 
-    public QWordBuilder(String rules) {
-        this();
-        this.loadRules(new StringReader(rules));
-    }
-
     public QWordBuilder() {
         gOr = "OR";
         gAnd = "AND";
-        sepOr = new char[]{' '};
-        sepAnd = new char[]{','};
+        sepOr = new char[]{' ', '\t', '|', '\n'};
+        sepAnd = new char[]{',', '&'};
         quoteBegin = new char[]{'"', '\''};
         quoteEnd = new char[]{'"', '\''};
         bracketBegin = new char[]{'[', '(', '{'};
@@ -70,8 +65,10 @@ public class QWordBuilder {
     public QWordBuilder setup(Map<String, Object> map) {
         gOr = Strings.sBlank(map.get("gOr"), gOr);
         gAnd = Strings.sBlank(map.get("gAnd"), gAnd);
-        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr)).toCharArray();
-        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd)).toCharArray();
+        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr))
+                       .toCharArray();
+        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd))
+                        .toCharArray();
         return this;
     }
 
@@ -100,14 +97,18 @@ public class QWordBuilder {
                     int pos = line.indexOf(':');
                     // 神码？竟敢木油冒号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
+                        throw Lang.makeThrow("invalid rule line %d : %s",
+                                             lineNumber,
+                                             line);
                     // 获取名称
                     qr.key = Strings.trim(line.substring(1, pos));
                     String regex;
 
                     // 看看是否是简要模式
                     if (line.charAt(pos + 1) == ':') {
-                        regex = "^(" + Strings.trim(line.substring(pos + 2)) + ")(.*)$";
+                        regex = "^("
+                                + Strings.trim(line.substring(pos + 2))
+                                + ")(.*)$";
                     }
                     // 普通模式
                     else {
@@ -125,7 +126,9 @@ public class QWordBuilder {
 
                     // 神码？竟敢木油等号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
+                        throw Lang.makeThrow("invalid rule line %d : %s",
+                                             lineNumber,
+                                             line);
 
                     qr.type = QCndType.valueOf(Strings.trim(line.substring(pos + 1)));
                     qr.seg = Segments.create(Strings.trim(line.substring(0, pos)));
@@ -148,21 +151,30 @@ public class QWordBuilder {
         if (Strings.isBlank(kwd))
             return null;
 
+        // 建立返回值
+        QWord w = new QWord();
+
         // 判断是否全局为 OR
-        boolean gIsOr = false;
-        if (!Strings.isBlank(gOr) && kwd.startsWith(gOr + ":"))
+        Boolean gIsOr = null;
+        Boolean gIsAnd = null;
+        if (null != gOr && kwd.startsWith(gOr + ":")) {
+            kwd = kwd.substring(gOr.length() + 1);
             gIsOr = true;
-        boolean gIsAnd = !gIsOr;
+            w.setDefaultAllAnd(false);
+        }
+        if (null != gAnd && kwd.startsWith(gAnd + ":")) {
+            kwd = kwd.substring(gAnd.length() + 1);
+            gIsAnd = true;
+            w.setDefaultAllAnd(true);
+        }
 
         // 拆分字符串
         List<String> flds = new ArrayList<String>();
-        List<Character> seps = new ArrayList<Character>();
+        List<Boolean> seps = new ArrayList<Boolean>();
 
         _kwd_to_flds(kwd, flds, seps);
 
         // 准备解析
-        QWord w = new QWord();
-
         Context c = Lang.context();
         int i = 0;
         for (; i < seps.size(); i++) {
@@ -171,8 +183,17 @@ public class QWordBuilder {
 
             // 加入到关键字中
             if (null != cnd) {
-                char sep = seps.get(i);
-                w.add(cnd, gIsAnd || (sep != '|'));
+                boolean nextIsAnd = seps.get(i);
+                // AND:xxxxx
+                if (null != gIsAnd && gIsAnd.booleanValue()) {
+                    nextIsAnd = true;
+                }
+                // OR:xxxx
+                else if (null != gIsOr && gIsOr.booleanValue()) {
+                    nextIsAnd = false;
+                }
+
+                w.add(cnd, nextIsAnd);
             }
         }
 
@@ -209,6 +230,8 @@ public class QWordBuilder {
 
                 // 生成值
                 switch (rule.type) {
+                case INT:
+                    return cnd.setValue(Integer.valueOf(str));
                 case IntRegion:
                     Region<Integer> rI = Region.Int(str);
                     return rI.isNull() ? null : cnd.setValue(rI);
@@ -220,10 +243,12 @@ public class QWordBuilder {
                     return rD.isNull() ? null : cnd.setValue(rD);
                 case StringEnum:
                     String[] ss = Strings.splitIgnoreBlank(str);
-                    return ss == null || ss.length == 0 ? null : cnd.setValue(ss);
+                    return ss == null || ss.length == 0 ? null
+                                                       : cnd.setValue(ss);
                 case IntEnum:
                     int[] ii = Nums.splitInt(str);
-                    return ii == null || ii.length == 0 ? null : cnd.setValue(ii);
+                    return ii == null || ii.length == 0 ? null
+                                                       : cnd.setValue(ii);
                 case Regex:
                     try {
                         return cnd.setValue(Pattern.compile(str));
@@ -238,6 +263,7 @@ public class QWordBuilder {
                     catch (Exception e) {
                         return null;
                     }
+
                 default:
                     return cnd.setType(QCndType.String).setValue(str);
                 }
@@ -246,13 +272,35 @@ public class QWordBuilder {
         return null;
     }
 
-    private void _kwd_to_flds(String kwd, List<String> flds, List<Character> seps) {
+    private void _kwd_to_flds(String kwd, List<String> flds, List<Boolean> seps) {
 
         char[] cs = kwd.toCharArray();
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < cs.length; i++) {
             char c = cs[i];
+            // 如果是 AND 的连接符
+            if (Nums.isin(sepAnd, c)) {
+                if (!Strings.isBlank(sb)) {
+                    flds.add(sb.toString());
+                    seps.add(Boolean.TRUE);
+                    sb = new StringBuilder();
+                }
+                // 如果已经有字段了，那么将最后一个连接符设为 "AND"
+                else if (!flds.isEmpty()) {
+                    seps.set(flds.size() - 1, Boolean.TRUE);
+                }
+                continue;
+            }
+            // 如果是 OR 的连接符
+            if (Nums.isin(sepOr, c)) {
+                if (!Strings.isBlank(sb)) {
+                    flds.add(sb.toString());
+                    seps.add(Boolean.FALSE);
+                    sb = new StringBuilder();
+                }
+                continue;
+            }
             // 空白字符，忽略
             if (Character.isWhitespace(c)) {
                 continue;
@@ -289,24 +337,6 @@ public class QWordBuilder {
                         break;
                     }
                 }
-                continue;
-            }
-            // 如果是 AND 的连接符
-            if (Nums.isin(sepAnd, c)) {
-                if (!Strings.isBlank(sb)) {
-                    flds.add(sb.toString());
-                    seps.add(c);
-                }
-                sb = new StringBuilder();
-                continue;
-            }
-            // 如果是 OR 的连接符
-            if (Nums.isin(sepOr, c)) {
-                if (!Strings.isBlank(sb)) {
-                    flds.add(sb.toString());
-                    seps.add(c);
-                }
-                sb = new StringBuilder();
                 continue;
             }
             // 其他的字符，就是普通的增加就是

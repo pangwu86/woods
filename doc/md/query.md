@@ -112,6 +112,7 @@
 我们现在支持下列约束类型
 * Regex : 正则表达式
 * String : 普通字符串
+* INT : 普通整数
 * IntRegion : 整数区间（可以支持开区间，闭区间，以及精确数值）
 * LongRegion
 * DateRegion

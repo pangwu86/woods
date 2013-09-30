@@ -10,17 +10,20 @@ import org.nutz.lang.util.NutMap;
 
 public class QWord {
 
-    private List<Character> rels;
+    private List<Character> seps;
 
     private List<QCnd> cnds;
 
+    private boolean defaultAllAnd;
+
     public QWord() {
-        rels = new ArrayList<Character>();
+        seps = new ArrayList<Character>();
         cnds = new ArrayList<QCnd>();
+        defaultAllAnd = true;
     }
 
-    public List<Character> rels() {
-        return rels;
+    public List<Character> seps() {
+        return seps;
     }
 
     public List<QCnd> cnds() {
@@ -28,25 +31,22 @@ public class QWord {
     }
 
     public boolean isAllAnd() {
-        for (Character c : rels) {
+        for (Character c : seps) {
             if (c.charValue() != '&')
                 return false;
         }
-        return true;
+        return defaultAllAnd;
     }
 
-    public boolean isAllOr() {
-        for (Character c : rels) {
-            if (c.charValue() != '|')
-                return false;
-        }
-        return true;
+    public QWord setAllAnd(boolean allAnd) {
+        char c = allAnd ? '&' : '|';
+        for (int i = 0; i < seps.size(); i++)
+            seps.set(i, c);
+        return this;
     }
 
-    public QWord setAll(char c) {
-        c = c == '&' ? '&' : '|';
-        for (int i = 0; i < rels.size(); i++)
-            rels.set(i, c);
+    public QWord setDefaultAllAnd(boolean defaultAllAnd) {
+        this.defaultAllAnd = defaultAllAnd;
         return this;
     }
 
@@ -64,7 +64,7 @@ public class QWord {
             for (int i = 1; i < cnds.size(); i++) {
                 each.invoke(i,
                             cnds.get(i),
-                            (rels.get(i - 1).charValue() == '&'));
+                            (seps.get(i - 1).charValue() == '&'));
             }
         }
     }
@@ -81,7 +81,7 @@ public class QWord {
     public QWord add(QCnd cnd, boolean nextAnd) {
         if (null != cnd) {
             cnds.add(cnd);
-            rels.add(nextAnd ? '&' : '|');
+            seps.add(nextAnd ? '&' : '|');
         }
         return this;
     }
@@ -97,8 +97,8 @@ public class QWord {
     public QWord done(QCnd cnd) {
         // 最后一个约束为空，则弹出最后一个连接符
         if (null == cnd) {
-            if (rels.size() > 0)
-                rels.remove(rels.size() - 1);
+            if (seps.size() > 0)
+                seps.remove(seps.size() - 1);
         }
         // 正常增加最后一个约束
         else {

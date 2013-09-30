@@ -28,6 +28,7 @@ public class QCnd {
         case LongRegion:
         case DateRegion:
         case Regex:
+        case INT:
         case String:
             return value.toString();
         case StringEnum:
@@ -61,6 +62,10 @@ public class QCnd {
 
     public String asString() {
         return (String) value;
+    }
+
+    public int asInt() {
+        return (Integer) value;
     }
 
     public int[] asIntEnum() {

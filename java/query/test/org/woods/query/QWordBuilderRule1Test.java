@@ -1,5 +1,6 @@
 package org.woods.query;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.nutz.lang.Lang.map;
 
@@ -17,8 +18,18 @@ import org.nutz.lang.Lang;
 public class QWordBuilderRule1Test {
 
     @Test
-    public void test_group_by_comma() {
-        _c(Q("lv(0,4) , T(sin,org)"), "{lv:'(0,4)', tp:['sin','org']}");
+    public void test_g_and_or() {
+        _c(Q("lv(0,4) , T(sin,org)"), "{lv:'(0,4)', tp:['sin','org']}", true);
+        _c(Q("OR:lv(0,4)  T(sin,org)"), "{lv:'(0,4)', tp:['sin','org']}", false);
+        _c(Q("lv(0,4)  T(sin,org)"), "{lv:'(0,4)', tp:['sin','org']}", false);
+        _c(Q("AND:lv(0,4)  T(sin,org)"), "{lv:'(0,4)', tp:['sin','org']}", true);
+        _c(Q("OR:lv(0,4)"), "{lv:'(0,4)'}", false);
+    }
+
+    @Test
+    public void test_by_d() {
+        _c(Q("d0"), "{d:0}");
+        _c(Q("d23"), "{d:23}");
     }
 
     @Test
@@ -127,6 +138,16 @@ public class QWordBuilderRule1Test {
         _c(q, m0);
     }
 
+    private void _c(QWord q, String json, boolean expectAllAnd) {
+        if (expectAllAnd) {
+            assertTrue(q.isAllAnd());
+        } else {
+            assertFalse(q.isAllAnd());
+        }
+        Map<String, Object> m0 = Lang.map(json);
+        _c(q, m0);
+    }
+
     @SuppressWarnings("unchecked")
     private void _c(QWord q, Map<String, Object> map) {
         try {
@@ -135,7 +156,9 @@ public class QWordBuilderRule1Test {
             assertTrue(Lang.equals(m0, m1));
         }
         catch (AssertionError e) {
-            System.out.printf("expect '%s', but '%s'", Json.toJson(map, JsonFormat.compact()), q);
+            System.out.printf("expect '%s', but '%s'",
+                              Json.toJson(map, JsonFormat.compact()),
+                              q);
             throw e;
         }
     }

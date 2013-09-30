@@ -20,7 +20,11 @@ public class MoWebQuery extends WebQuery {
      */
     public DBCursor setup(DBCursor cu) {
         cu.skip(offset()).limit(pageSize);
+        setupOrder(cu);
+        return cu;
+    }
 
+    public DBCursor setupOrder(DBCursor cu) {
         if (hasOrder()) {
             ZMoDoc sort = ZMoDoc.NEW(orderFields.length);
             for (WebOrderField of : orderFields) {
@@ -32,25 +36,21 @@ public class MoWebQuery extends WebQuery {
     }
 
     protected void _join_region(final BasicDBList list, String key, Region<?> rg) {
-        ZMoDoc r = _region_to_doc(key, rg);
-        if (r != null) {
-            list.add(ZMoDoc.NEW(key, r));
-        }
-    }
-
-    protected ZMoDoc _region_to_doc(String key, Region<?> rg) {
-        ZMoDoc r = ZMoDoc.NEW();
+        // 如果是一个范围
         if (rg.isRegion()) {
+            ZMoDoc q = ZMoDoc.NEW();
             if (rg.left() != null) {
-                r.put(rg.leftOpt("$gt", "$gte"), rg.left());
+                q.put(rg.leftOpt("$gt", "$gte"), rg.left());
             }
             if (rg.right() != null) {
-                r.put(rg.rightOpt("$lt", "$lte"), rg.right());
+                q.put(rg.rightOpt("$lt", "$lte"), rg.right());
             }
-        } else if (!rg.isNull()) {
-            r.put(key, rg.left());
+            list.add(ZMoDoc.NEW(key, q));
         }
-        return r.isEmpty() ? null : r;
+        // 如果是一个精确的值
+        else if (!rg.isNull()) {
+            list.add(ZMoDoc.NEW(key, rg.left()));
+        }
     }
 
     protected void _join_str_enum(final BasicDBList list,
