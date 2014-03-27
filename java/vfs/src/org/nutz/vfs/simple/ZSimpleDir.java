@@ -3,6 +3,7 @@ package org.nutz.vfs.simple;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.nutz.lang.Files;
 import org.nutz.lang.Lang;
@@ -10,6 +11,7 @@ import org.nutz.lang.util.Disks;
 import org.nutz.vfs.ZDir;
 import org.nutz.vfs.ZFWalker;
 import org.nutz.vfs.ZFile;
+import org.nutz.vfs.ZIO;
 
 public class ZSimpleDir extends ZSimpleFile implements ZDir {
 
@@ -37,11 +39,43 @@ public class ZSimpleDir extends ZSimpleFile implements ZDir {
     }
 
     @Override
-    public List<ZFile> ls(boolean ignoreHidden) {
+    public void createIfNoExists() {
+        Files.createDirIfNoExists(f);
+    }
+
+    @Override
+    public void copyTo(final ZIO fromIO, final ZIO toIO, final ZFile dDest) {
+        if (!dDest.isDir())
+            throw Lang.makeThrow("Dir(%s) can not copy to dir(%s)",
+                                 path(),
+                                 dDest.path());
+        final ZFile dSrc = this;
+        this.walk(true, new ZFWalker() {
+            public boolean invoke(int i, ZFile zf) {
+                if (zf.isDir())
+                    return true;
+                String rph = dSrc.relative(zf);
+                ZFile zfDest = ((ZDir) dDest).createFileIfNoExists(rph);
+                zf.copyTo(fromIO, toIO, zfDest);
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public List<ZFile> ls() {
+        return ls(null, true);
+    }
+
+    @Override
+    public List<ZFile> ls(String regex, boolean ignoreHidden) {
+        Pattern p = null == regex ? null : Pattern.compile(regex);
         File[] fs = f.listFiles();
         List<ZFile> list = new ArrayList<ZFile>(fs.length);
         for (File f : fs) {
             if (ignoreHidden && f.isHidden())
+                continue;
+            if (null != p && !p.matcher(f.getName().toLowerCase()).find())
                 continue;
             // 文件
             if (f.isFile()) {
@@ -51,6 +85,24 @@ public class ZSimpleDir extends ZSimpleFile implements ZDir {
             else if (f.isDirectory()) {
                 list.add(new ZSimpleDir(f));
             }
+        }
+        return list;
+    }
+
+    @Override
+    public List<ZFile> lsFile(String regex, boolean ignoreHidden) {
+        Pattern p = null == regex ? null : Pattern.compile(regex);
+        File[] fs = f.listFiles();
+        List<ZFile> list = new ArrayList<ZFile>(fs.length);
+        for (File f : fs) {
+            if (f.isDirectory())
+                continue;
+            if (ignoreHidden && f.isHidden())
+                continue;
+            if (null != p && !p.matcher(f.getName().toLowerCase()).find())
+                continue;
+            // 添加
+            list.add(new ZSimpleFile(f));
         }
         return list;
     }
@@ -157,7 +209,7 @@ public class ZSimpleDir extends ZSimpleFile implements ZDir {
     }
 
     private int _walk_children(boolean ignoreHidden, ZFWalker walker, int i) {
-        List<ZFile> list = ls(ignoreHidden);
+        List<ZFile> list = ls(null, ignoreHidden);
         for (ZFile zf : list) {
             if (ignoreHidden && zf.isHidden()) {
                 continue;
@@ -186,7 +238,16 @@ public class ZSimpleDir extends ZSimpleFile implements ZDir {
     }
 
     private File _get_file(String path) {
-        String ph = Disks.getCanonicalPath(path);
-        return Files.getFile(f, ph);
+        // 如果标识了home
+        if (path.startsWith("~")) {
+            return new File(Disks.absolute(path));
+        }
+        // 如果是绝对路径
+        if (path.matches("^([a-zA-Z]:|/)(.+)$")) {
+            return new File(Disks.getCanonicalPath(path));
+        }
+        // 如果是相对路径
+        String ph = Disks.getCanonicalPath(path() + "/" + path);
+        return new File(ph);
     }
 }

@@ -10,6 +10,16 @@ public interface ZFile {
 
     String typeLower();
 
+    long lastModified();
+
+    ZDir parent();
+
+    void copyTo(ZIO fromIO, ZIO toIO, ZFile zf);
+
+    void moveTo(ZFile zf);
+
+    void createIfNoExists();
+
     /**
      * 根据一个文件，得到相对于自己的路径
      * 
@@ -33,6 +43,8 @@ public interface ZFile {
     boolean isDir();
 
     boolean isHidden();
+    
+    boolean exists();
 
     /**
      * @param regex

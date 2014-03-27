@@ -1,7 +1,9 @@
 package org.nutz.vfs;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.io.Writer;
 
 /**
  * 封装了对于 ZPage IO的操作，通过这个接口的不通实现，<br>
@@ -30,6 +32,20 @@ public interface ZIO {
      *            文本内容输入流，本函数会关闭它
      */
     void writeString(ZFile zf, Reader r);
+
+    /**
+     * @param zf
+     *            文件
+     * @return 文本写入流，调用者负责关闭
+     */
+    Writer openWriter(ZFile zf);
+
+    /**
+     * @param zf
+     *            文件
+     * @return 写入流，调用者负责关闭
+     */
+    OutputStream openOutputStream(ZFile zf);
 
     /**
      * 打开一个文件的输入流准备读取文件内容，调用者负责关闭这个流

@@ -1,11 +1,15 @@
 package org.nutz.vfs.simple;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.nutz.lang.Files;
 import org.nutz.lang.Lang;
 import org.nutz.lang.util.Disks;
+import org.nutz.vfs.ZDir;
 import org.nutz.vfs.ZFile;
+import org.nutz.vfs.ZIO;
 
 public class ZSimpleFile implements ZFile {
 
@@ -21,6 +25,12 @@ public class ZSimpleFile implements ZFile {
         this.f = f;
     }
 
+    public int hashCode() {
+        if (null == f)
+            return 0;
+        return f.hashCode();
+    }
+
     @Override
     public boolean isFile() {
         return true;
@@ -34,6 +44,47 @@ public class ZSimpleFile implements ZFile {
     @Override
     public boolean isHidden() {
         return f.isHidden();
+    }
+
+    @Override
+    public boolean exists() {
+        return f.exists();
+    }
+
+    @Override
+    public long lastModified() {
+        return f.lastModified();
+    }
+
+    @Override
+    public ZDir parent() {
+        return new ZSimpleDir(f.getParentFile());
+    }
+
+    @Override
+    public void createIfNoExists() {
+        Files.createFileIfNoExists(f);
+    }
+
+    @Override
+    public void copyTo(ZIO fromIO, ZIO toIO, ZFile zf) {
+        zf.createIfNoExists();
+        InputStream ins = fromIO.read(this);
+        toIO.write(zf, ins);
+    }
+
+    @Override
+    public void moveTo(ZFile zf) {
+        if (zf instanceof ZSimpleFile) {
+            try {
+                Files.move(f, ((ZSimpleFile) zf).f);
+            }
+            catch (IOException e) {
+                throw Lang.wrapThrow(e);
+            }
+            return;
+        }
+        throw Lang.makeThrow("ZSimpleFile can moveTo another ZSimpleFile only!");
     }
 
     @Override

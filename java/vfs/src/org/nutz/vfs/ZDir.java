@@ -9,15 +9,29 @@ import java.util.List;
  * @author zozoh(zozohtnt@gmail.com)
  */
 public interface ZDir extends ZFile {
+    
+    List<ZFile> ls();
+
+    /**
+     * @param regex
+     *            一个正则表达式匹配文件名
+     * @param ignoreHidden
+     *            是否忽略隐藏项目
+     * 
+     * @return 本目录下所有的文件和子目录
+     */
+    List<ZFile> ls(String regex, boolean ignoreHidden);
 
     /**
      * 
+     * @param regex
+     *            一个正则表达式匹配文件名
      * @param ignoreHidden
      *            是否忽略隐藏项目
      * 
      * @return 本目录下所有的文件
      */
-    List<ZFile> ls(boolean ignoreHidden);
+    List<ZFile> lsFile(String regex, boolean ignoreHidden);
 
     /**
      * 获取一个文件对象
