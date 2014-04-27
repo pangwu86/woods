@@ -65,10 +65,8 @@ public class QWordBuilder {
     public QWordBuilder setup(Map<String, Object> map) {
         gOr = Strings.sBlank(map.get("gOr"), gOr);
         gAnd = Strings.sBlank(map.get("gAnd"), gAnd);
-        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr))
-                       .toCharArray();
-        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd))
-                        .toCharArray();
+        sepOr = Strings.sBlank(map.get("sepOr"), new String(sepOr)).toCharArray();
+        sepAnd = Strings.sBlank(map.get("sepAnd"), new String(sepAnd)).toCharArray();
         return this;
     }
 
@@ -97,18 +95,14 @@ public class QWordBuilder {
                     int pos = line.indexOf(':');
                     // 神码？竟敢木油冒号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s",
-                                             lineNumber,
-                                             line);
+                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
                     // 获取名称
                     qr.key = Strings.trim(line.substring(1, pos));
                     String regex;
 
                     // 看看是否是简要模式
                     if (line.charAt(pos + 1) == ':') {
-                        regex = "^("
-                                + Strings.trim(line.substring(pos + 2))
-                                + ")(.*)$";
+                        regex = "^(" + Strings.trim(line.substring(pos + 2)) + ")(.*)$";
                     }
                     // 普通模式
                     else {
@@ -126,9 +120,7 @@ public class QWordBuilder {
 
                     // 神码？竟敢木油等号？！ 抛错对付你 >:D
                     if (pos == -1)
-                        throw Lang.makeThrow("invalid rule line %d : %s",
-                                             lineNumber,
-                                             line);
+                        throw Lang.makeThrow("invalid rule line %d : %s", lineNumber, line);
 
                     qr.type = QCndType.valueOf(Strings.trim(line.substring(pos + 1)));
                     qr.seg = Segments.create(Strings.trim(line.substring(0, pos)));
@@ -217,9 +209,10 @@ public class QWordBuilder {
                 // 得到抽出字符串
                 String str = rule.seg.render(c).toString();
 
+                // FIXME, 空字符串也是一种信息哟
                 // 抽出空字符串，那么就表示这个规则啥都木有
-                if (Strings.isBlank(str))
-                    return null;
+                // if (Strings.isBlank(str))
+                // return null;
 
                 // 设置与约束
                 QCnd cnd = new QCnd();
@@ -243,12 +236,10 @@ public class QWordBuilder {
                     return rD.isNull() ? null : cnd.setValue(rD);
                 case StringEnum:
                     String[] ss = Strings.splitIgnoreBlank(str);
-                    return ss == null || ss.length == 0 ? null
-                                                       : cnd.setValue(ss);
+                    return ss == null || ss.length == 0 ? null : cnd.setValue(ss);
                 case IntEnum:
                     int[] ii = Nums.splitInt(str);
-                    return ii == null || ii.length == 0 ? null
-                                                       : cnd.setValue(ii);
+                    return ii == null || ii.length == 0 ? null : cnd.setValue(ii);
                 case Regex:
                     try {
                         return cnd.setValue(Pattern.compile(str));
