@@ -14,6 +14,7 @@ import java.util.List;
 import org.junit.Test;
 import org.nutz.lang.Files;
 import org.nutz.lang.Streams;
+import org.nutz.lang.util.Disks;
 import org.woods.json4excel.bean.Person;
 
 public class J4ETest {
@@ -22,7 +23,10 @@ public class J4ETest {
 
     @Test
     public void test_fromExcel() throws Exception {
-
+        File e = new File(Disks.absolute("test.xls"));
+        List<Person> plist = J4E.fromExcel(Streams.fileIn(e), Person.class, null);
+        assertEquals(3, plist.size());
+        _test_excel_(e, 3);
     }
 
     @Test

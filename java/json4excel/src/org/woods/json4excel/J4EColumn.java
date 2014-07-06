@@ -2,7 +2,7 @@ package org.woods.json4excel;
 
 import java.lang.reflect.Field;
 
-import org.nutz.json.JsonIgnore;
+import org.nutz.json.JsonField;
 
 public class J4EColumn {
 
@@ -16,7 +16,7 @@ public class J4EColumn {
     private String columnName;
 
     // 真实的field
-    @JsonIgnore
+    @JsonField(ignore = true)
     private Field field;
 
     void setField(Field field) {
