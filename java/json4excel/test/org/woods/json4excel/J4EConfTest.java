@@ -28,7 +28,7 @@ public class J4EConfTest {
     @Test
     public void test_from_confStr() throws Exception {
         String confStr = Files.read(Disks.absolute("PersonConf.js"));
-        _test_(J4EConf.fromConfStr(confStr));
+        _test_(J4EConf.fromConf(confStr));
     }
 
     public void _test_(J4EConf jc) {

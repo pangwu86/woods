@@ -95,7 +95,7 @@ public class J4EConf {
         return Json.fromJson(J4EConf.class, new InputStreamReader(confInputStream));
     }
 
-    public static J4EConf fromConfStr(CharSequence confStr) {
+    public static J4EConf fromConf(CharSequence confStr) {
         return Json.fromJson(J4EConf.class, confStr);
     }
 }

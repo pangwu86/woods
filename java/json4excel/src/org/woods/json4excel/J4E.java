@@ -36,11 +36,13 @@ public class J4E {
      * 将给定的数据列表datalist, 按照j4eConf中的配置, 输出到out
      * 
      * @param out
-     * @param dataList
+     *            输出流
+     * @param objClz
+     *            转换后的对象Class, 对应一行数据
      * @param j4eConf
-     *            (非必须, 可自动生成)
+     *            转换配置(非必须, 可自动生成)
      * 
-     * @return
+     * @return 是否转换并写入成功
      */
     public static <T> boolean toExcel(OutputStream out, List<?> dataList, J4EConf j4eConf) {
         if (dataList == null || dataList.size() == 0) {
@@ -58,10 +60,12 @@ public class J4E {
      * 解析输入流, 按照j4eConf中的配置, 读取后返回objClz类型的数量列表
      * 
      * @param in
+     *            输入流
      * @param objClz
+     *            转换后的对象Class, 对应一行数据
      * @param j4eConf
-     *            (非必须, 可自动生成)
-     * @return
+     *            转换配置(非必须, 可自动生成)
+     * @return 数据列表
      */
     public static <T> List<T> fromExcel(InputStream in, Class<T> objClz, J4EConf j4eConf) {
         if (null == j4eConf) {
