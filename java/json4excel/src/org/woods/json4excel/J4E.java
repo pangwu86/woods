@@ -14,11 +14,13 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.nutz.castor.Castors;
 import org.nutz.json.Json;
 import org.nutz.lang.Mirror;
 import org.nutz.lang.Strings;
 import org.nutz.log.Log;
 import org.nutz.log.Logs;
+import org.woods.json4excel.annotation.J4EName;
 
 /**
  * 根据json配置文件, 读取或导出excel文件
@@ -44,16 +46,70 @@ public class J4E {
      * 
      * @return 是否转换并写入成功
      */
-    public static <T> boolean toExcel(OutputStream out, List<?> dataList, J4EConf j4eConf) {
+    @SuppressWarnings("unchecked")
+    public static <T> boolean toExcel(OutputStream out, List<T> dataList, J4EConf j4eConf) {
         if (dataList == null || dataList.size() == 0) {
             log.warn("datalist is empty! can't convert to excel");
             return false;
         }
+        Class<T> objClz = (Class<T>) dataList.get(0).getClass();
+        Mirror<T> mc = Mirror.me(objClz);
         if (null == j4eConf) {
-            j4eConf = J4EConf.from(dataList.get(0).getClass());
+            j4eConf = J4EConf.from(objClz);
         }
-
-        return saveExcel(out, null);
+        if (Strings.isBlank(j4eConf.getSheetName())) {
+            String sheetName = objClz.getSimpleName();
+            J4EName cName = objClz.getAnnotation(J4EName.class);
+            if (cName != null && !Strings.isBlank(cName.value())) {
+                sheetName = cName.value();
+            }
+            j4eConf.setSheetName(sheetName);
+        }
+        // FIXME 暂时是生成一个新的excel, 以后可以向现有的excel文件中写入
+        Workbook wb = new HSSFWorkbook();
+        Sheet sheet = wb.createSheet(j4eConf.getSheetName());
+        // 判断column的field是否都在T中
+        for (J4EColumn jcol : j4eConf.getColumns()) {
+            if (!Strings.isBlank(jcol.getFieldName())) {
+                try {
+                    Field cfield = mc.getField(jcol.getFieldName());
+                    jcol.setField(cfield);
+                }
+                catch (NoSuchFieldException e) {
+                    log.warnf("can't find Field[%s] in Class[%s]",
+                              jcol.getFieldName(),
+                              objClz.getName());
+                }
+            }
+        }
+        int rnum = 0;
+        // 写入head
+        Row rhead = sheet.createRow(rnum++);
+        int cindex = 0;
+        for (J4EColumn jcol : j4eConf.getColumns()) {
+            Field jfield = jcol.getField();
+            if (null != jfield) {
+                Cell c = rhead.createCell(cindex++);
+                c.setCellType(Cell.CELL_TYPE_STRING);
+                c.setCellValue(Strings.isBlank(jcol.getColumnName()) ? jcol.getFieldName()
+                                                                    : jcol.getColumnName());
+            }
+        }
+        // 写入row
+        for (T dval : dataList) {
+            Row row = sheet.createRow(rnum++);
+            cindex = 0;
+            for (J4EColumn jcol : j4eConf.getColumns()) {
+                Field jfield = jcol.getField();
+                if (null != jfield) {
+                    Cell c = row.createCell(cindex++);
+                    c.setCellType(Cell.CELL_TYPE_STRING);
+                    Object dfv = mc.getValue(dval, jfield);
+                    c.setCellValue(dfv != null ? Castors.me().castTo(dfv, String.class) : "");
+                }
+            }
+        }
+        return saveExcel(out, wb);
     }
 
     /**
@@ -74,12 +130,21 @@ public class J4E {
         Workbook wb = loadExcel(in);
         Mirror<T> mc = Mirror.me(objClz);
         // 读取sheet
+
         Sheet sheet = null;
-        if (!Strings.isBlank(j4eConf.getSheetName())) {
-            sheet = wb.getSheet(j4eConf.getSheetName());
+        if (null != j4eConf.getSheetIndex()) {
+            sheet = wb.getSheetAt(j4eConf.getSheetIndex());
         }
         if (null == sheet) {
-            sheet = wb.getSheetAt(j4eConf.getSheetIndex());
+            if (Strings.isBlank(j4eConf.getSheetName())) {
+                String sheetName = objClz.getSimpleName();
+                J4EName cName = objClz.getAnnotation(J4EName.class);
+                if (cName != null && !Strings.isBlank(cName.value())) {
+                    sheetName = cName.value();
+                }
+                j4eConf.setSheetName(sheetName);
+            }
+            sheet = wb.getSheet(j4eConf.getSheetName());
         }
         if (null == sheet) {
             log.errorf("excel not has sheet at [%d] or sheetName is [%s]",
