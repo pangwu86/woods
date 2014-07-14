@@ -14,6 +14,7 @@ import org.nutz.lang.Strings;
 import org.nutz.lang.util.Disks;
 import org.woods.json4excel.annotation.J4EName;
 
+@SuppressWarnings("rawtypes")
 public class J4EConf {
 
     // excel中的sheet的index, 从1开始
@@ -24,6 +25,17 @@ public class J4EConf {
 
     // sheet中对应的列
     private List<J4EColumn> columns;
+
+    // 每一行生成之后, 可以做一定的处理
+    private J4EEachRow eachPrepare;
+
+    public J4EEachRow getEachPrepare() {
+        return eachPrepare;
+    }
+
+    public void setEachPrepare(J4EEachRow eachPrepare) {
+        this.eachPrepare = eachPrepare;
+    }
 
     public Integer getSheetIndex() {
         return sheetIndex;
@@ -62,13 +74,11 @@ public class J4EConf {
         jc.setSheetName(sheetName);
         // columns
         List<J4EColumn> jclist = new ArrayList<J4EColumn>();
-        int index = 0;
         Mirror<?> mc = Mirror.me(clz);
         for (Field cf : mc.getFields()) {
             J4EColumn jcol = new J4EColumn();
             jcol.setFieldName(cf.getName());
             jcol.setColumnName(cf.getName());
-            jcol.setColumnIndex(index++);
             J4EName fName = cf.getAnnotation(J4EName.class);
             if (fName != null && !Strings.isBlank(fName.value())) {
                 jcol.setColumnName(fName.value());

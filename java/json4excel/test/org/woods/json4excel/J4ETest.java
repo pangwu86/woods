@@ -56,7 +56,7 @@ public class J4ETest {
         Files.createFileIfNoExists(e);
         assertTrue(J4E.toExcel(new FileOutputStream(e), PL(pn), null));
         _test_excel_(e, pn);
-        Files.deleteFile(e);
+        // Files.deleteFile(e);
     }
 
     public void _test_excel_(File ef, int dn) {

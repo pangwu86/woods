@@ -15,6 +15,9 @@ public class J4EColumn {
     // 在excel中的标题名字
     private String columnName;
 
+    // 列按照什么类型读取
+    private J4EColumnType columnType;
+
     // 真实的field
     @JsonField(ignore = true)
     private Field field;
@@ -49,6 +52,14 @@ public class J4EColumn {
 
     public void setColumnIndex(Integer columnIndex) {
         this.columnIndex = columnIndex;
+    }
+
+    public J4EColumnType getColumnType() {
+        return columnType;
+    }
+
+    public void setColumnType(J4EColumnType columnType) {
+        this.columnType = columnType;
     }
 
 }

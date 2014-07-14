@@ -3,6 +3,7 @@ package org.woods.json4excel;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -123,6 +124,7 @@ public class J4E {
      *            转换配置(非必须, 可自动生成)
      * @return 数据列表
      */
+    @SuppressWarnings("unchecked")
     public static <T> List<T> fromExcel(InputStream in, Class<T> objClz, J4EConf j4eConf) {
         if (null == j4eConf) {
             j4eConf = J4EConf.from(objClz);
@@ -144,7 +146,15 @@ public class J4E {
                 }
                 j4eConf.setSheetName(sheetName);
             }
-            sheet = wb.getSheet(j4eConf.getSheetName());
+            // sheetName 可以是多个
+            String[] snArray = j4eConf.getSheetName().split("\\|");
+            for (String sn : snArray) {
+                sheet = wb.getSheet(sn);
+                if (sheet != null) {
+                    log.infof("find sheet by name [%s]", sn);
+                    break;
+                }
+            }
         }
         if (null == sheet) {
             log.errorf("excel not has sheet at [%d] or sheetName is [%s]",
@@ -165,7 +175,7 @@ public class J4E {
                 Map<String, Integer> headIndexMap = new HashMap<String, Integer>();
                 while (clist.hasNext()) {
                     Cell chead = clist.next();
-                    headIndexMap.put(cellValue(chead), cindex++);
+                    headIndexMap.put(cellValue(chead, null), cindex++);
                 }
                 for (J4EColumn jcol : j4eConf.getColumns()) {
                     if (null != headIndexMap.get(jcol.getColumnName())) {
@@ -200,6 +210,9 @@ public class J4E {
             }
             // 从第二行开始读数据
             T rVal = rowValue(row, j4eConf, mc);
+            if (null != j4eConf.getEachPrepare()) {
+                j4eConf.getEachPrepare().prepare(rVal);
+            }
             dataList.add(rVal);
         }
         return dataList;
@@ -211,24 +224,45 @@ public class J4E {
         for (J4EColumn jcol : j4eConf.getColumns()) {
             Field jfield = jcol.getField();
             if (null != jfield) {
-                String cVal = cellValue(row.getCell(jcol.getColumnIndex()));
+                Cell cell = row.getCell(jcol.getColumnIndex());
+                if (null == cell) {
+                    log.warn(String.format("cell [%d, %d] has null, so value is ''",
+                                           row.getRowNum(),
+                                           jcol.getColumnIndex()));
+                }
+                String cVal = (null == cell ? "" : cellValue(cell, jcol.getColumnType()));
                 mc.setValue(rVal, jfield, cVal);
             }
         }
         return rVal;
     }
 
-    private static String cellValue(Cell c) {
+    private static String cellValue(Cell c, J4EColumnType colType) {
+        if (null == colType) {
+            colType = J4EColumnType.STRING;
+        }
         try {
             int cType = c.getCellType();
             switch (cType) {
             case Cell.CELL_TYPE_NUMERIC: // 数字
-                c.setCellType(Cell.CELL_TYPE_STRING);
-                return c.getStringCellValue();
+                if (J4EColumnType.STRING == colType) {
+                    // 按照整形来拿, 防止2B的科学计数法
+                    DecimalFormat df = new DecimalFormat("0");
+                    return df.format(c.getNumericCellValue());
+                } else if (J4EColumnType.NUMERIC == colType) {
+                    // 按照double数字拿
+                    DecimalFormat df = new DecimalFormat("0.00");
+                    return df.format(c.getNumericCellValue());
+                } else {
+                    throw new RuntimeException("WTF, CELL_TYPE_NUMERIC is what!");
+                }
+                // 按照字符拿
             case Cell.CELL_TYPE_STRING: // 字符串
                 return c.getStringCellValue();
             case Cell.CELL_TYPE_BOOLEAN: // boolean
                 return String.valueOf(c.getBooleanCellValue());
+            case Cell.CELL_TYPE_FORMULA:
+                return String.valueOf(c.getNumericCellValue());
             default:
                 return c.getStringCellValue();
             }
