@@ -29,36 +29,64 @@ public class J4EConf {
     // 每一行生成之后, 可以做一定的处理
     private J4EEachRow eachPrepare;
 
+    // 不返回结果, 一般跟eachPrepare配合使用
+    private boolean noReturn;
+
+    // 声明使用2007格式, 读入一般会做兼容, 写入查看当前配置
+    private boolean use2007;
+
+    public boolean isUse2007() {
+        return use2007;
+    }
+
+    public J4EConf setUse2007(boolean use2007) {
+        this.use2007 = use2007;
+        return this;
+    }
+
+    public boolean isNoReturn() {
+        return noReturn;
+    }
+
+    public J4EConf setNoReturn(boolean noReturn) {
+        this.noReturn = noReturn;
+        return this;
+    }
+
     public J4EEachRow getEachPrepare() {
         return eachPrepare;
     }
 
-    public void setEachPrepare(J4EEachRow eachPrepare) {
+    public J4EConf setEachPrepare(J4EEachRow eachPrepare) {
         this.eachPrepare = eachPrepare;
+        return this;
     }
 
     public Integer getSheetIndex() {
         return sheetIndex;
     }
 
-    public void setSheetIndex(Integer sheetIndex) {
+    public J4EConf setSheetIndex(Integer sheetIndex) {
         this.sheetIndex = sheetIndex;
+        return this;
     }
 
     public String getSheetName() {
         return sheetName;
     }
 
-    public void setSheetName(String sheetName) {
+    public J4EConf setSheetName(String sheetName) {
         this.sheetName = sheetName;
+        return this;
     }
 
     public List<J4EColumn> getColumns() {
         return columns;
     }
 
-    public void setColumns(List<J4EColumn> columns) {
+    public J4EConf setColumns(List<J4EColumn> columns) {
         this.columns = columns;
+        return this;
     }
 
     // ===================== 生成J4EConf的快捷方法

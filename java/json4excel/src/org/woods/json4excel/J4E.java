@@ -15,6 +15,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.nutz.castor.Castors;
 import org.nutz.json.Json;
 import org.nutz.lang.Mirror;
@@ -67,7 +69,7 @@ public class J4E {
             j4eConf.setSheetName(sheetName);
         }
         // FIXME 暂时是生成一个新的excel, 以后可以向现有的excel文件中写入
-        Workbook wb = new HSSFWorkbook();
+        Workbook wb = j4eConf.isUse2007() ? new XSSFWorkbook() : new HSSFWorkbook();
         Sheet sheet = wb.createSheet(j4eConf.getSheetName());
         // 判断column的field是否都在T中
         for (J4EColumn jcol : j4eConf.getColumns()) {
@@ -124,15 +126,12 @@ public class J4E {
      *            转换配置(非必须, 可自动生成)
      * @return 数据列表
      */
-    @SuppressWarnings("unchecked")
     public static <T> List<T> fromExcel(InputStream in, Class<T> objClz, J4EConf j4eConf) {
         if (null == j4eConf) {
             j4eConf = J4EConf.from(objClz);
         }
         Workbook wb = loadExcel(in);
-        Mirror<T> mc = Mirror.me(objClz);
         // 读取sheet
-
         Sheet sheet = null;
         if (null != j4eConf.getSheetIndex()) {
             sheet = wb.getSheetAt(j4eConf.getSheetIndex());
@@ -162,8 +161,13 @@ public class J4E {
                        j4eConf.getSheetName());
             return null;
         }
-        // 按行读取数据
-        List<T> dataList = new ArrayList<T>();
+        return fromSheet(sheet, objClz, j4eConf);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> fromSheet(Sheet sheet, Class<T> objClz, J4EConf j4eConf) {
+        Mirror<T> mc = Mirror.me(objClz);
+        List<T> dataList = j4eConf.isNoReturn() ? null : new ArrayList<T>();
         Iterator<Row> rlist = sheet.rowIterator();
         boolean firstRow = true;
         while (rlist.hasNext()) {
@@ -211,9 +215,11 @@ public class J4E {
             // 从第二行开始读数据
             T rVal = rowValue(row, j4eConf, mc);
             if (null != j4eConf.getEachPrepare()) {
-                j4eConf.getEachPrepare().prepare(rVal);
+                j4eConf.getEachPrepare().doEach(rVal);
             }
-            dataList.add(rVal);
+            if (!j4eConf.isNoReturn()) {
+                dataList.add(rVal);
+            }
         }
         return dataList;
     }
@@ -282,15 +288,26 @@ public class J4E {
      * @param excel
      * @return
      */
-    private static Workbook loadExcel(InputStream in) {
+    public static Workbook loadExcel(InputStream in) {
         Workbook wb = null;
         try {
-            // 因为HSSF与XSSF的不同, 导致返回的sheet对象能有不同, 暂时先使用HSSF
-            // FIXME 稍后实现两种, XSSF使用更少的内存, 但仅仅能访问xlsx
-            wb = new HSSFWorkbook(in);
+            wb = WorkbookFactory.create(in);
+            // try {
+            // wb = WorkbookFactory.create(in);
+            // }
+            // catch (Exception e1) {
+            // // 因为HSSF与XSSF的不同, 导致返回的sheet对象能有不同, 暂时先使用HSSF
+            // // FIXME 稍后实现两种, XSSF使用更少的内存, 但仅仅能访问xlsx
+            // try {
+            // wb = new HSSFWorkbook(in);
+            // }
+            // catch (Exception e2) {
+            // wb = new XSSFWorkbook(in);
+            // }
+            // }
         }
-        catch (Exception e) {
-            log.error("can't load inputstream for a workbook", e);
+        catch (Exception e3) {
+            log.error("can't load inputstream for a workbook", e3);
         }
         return wb;
     }
